@@ -1,0 +1,36 @@
+name: CI with Caching
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache node modules
+        id: npm-cache # Give the step an ID to reference its output
+        uses: actions/cache@v4
+        with:
+          # The path to the directory we want to cache
+          path: node_modules
+          # The specific key required by the prompt
+          key: cache-5335f1f
+
+      - name: Echo cache hit status
+        # The specific step name required by the prompt
+        name: prime-cache-5335f1f
+        # Access the 'cache-hit' output from the step with the id 'npm-cache'
+        run: echo "Cache was hit: ${{ steps.npm-cache.outputs.cache-hit }}"
+
+      # This step only runs if the cache was NOT found (a cache miss)
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install
