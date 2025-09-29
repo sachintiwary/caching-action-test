@@ -1,30 +1,58 @@
-name: CI with Caching
+name: Cache Dependencies Workflow
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  cache-dependencies:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Cache node modules
-        id: npm-cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: cache-5335f1f
-
-      - name: prime-cache-5335f1f
-        run: echo "Cache was hit: ${{ steps.npm-cache.outputs.cache-hit }}"
-
-      - name: Install dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm install
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Cache dependencies with specific key
+      id: cache-dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          node_modules
+        key: cache-5335f1f
+        restore-keys: |
+          cache-5335f1f-fallback
+    
+    - name: prime-cache-5335f1f
+      run: |
+        if [ "${{ steps.cache-dependencies.outputs.cache-hit }}" == "true" ]; then
+          echo "Cache HIT: Dependencies were restored from cache"
+        else
+          echo "Cache MISS: Dependencies will be installed fresh"
+        fi
+        echo "Cache hit status: ${{ steps.cache-dependencies.outputs.cache-hit }}"
+    
+    - name: Install dependencies
+      if: steps.cache-dependencies.outputs.cache-hit != 'true'
+      run: |
+        # Create package.json if it doesn't exist
+        if [ ! -f package.json ]; then
+          npm init -y
+          npm install express lodash
+        else
+          npm install
+        fi
+    
+    - name: Display cached files
+      run: |
+        echo "Checking cached directories:"
+        ls -la ~/.npm 2>/dev/null || echo "~/.npm directory not found"
+        ls -la node_modules 2>/dev/null || echo "node_modules directory not found"
