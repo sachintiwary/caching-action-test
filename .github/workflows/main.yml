@@ -23,7 +23,6 @@ jobs:
           key: cache-5335f1f
 
       - name: prime-cache-5335f1f
-        # Corrected syntax from $(...) to ${{...}}
         run: echo "Cache was hit: ${{ steps.npm-cache.outputs.cache-hit }}"
 
       - name: Install dependencies
