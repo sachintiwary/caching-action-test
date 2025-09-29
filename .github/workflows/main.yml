@@ -22,8 +22,8 @@ jobs:
           path: node_modules
           key: cache-5335f1f
 
-      # This step is now corrected with only one name
       - name: prime-cache-5335f1f
+        # Corrected syntax from $(...) to ${{...}}
         run: echo "Cache was hit: ${{ steps.npm-cache.outputs.cache-hit }}"
 
       - name: Install dependencies
